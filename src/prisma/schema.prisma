@@ -1,0 +1,127 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+// 사용자 테이블
+model User {
+  id            String   @id @default(uuid())
+  email         String   @unique
+  name          String
+  university    String?  // 대학교
+  major         String?  // 전공
+  grade         Int?     // 학년
+  interests     String[] // 관심 분야 (배열)
+  createdAt     DateTime @default(now())
+  updatedAt     DateTime @updatedAt
+
+  // 관계
+  userEvents    UserEvent[]
+  recommendations Recommendation[]
+}
+
+// 이벤트 카테고리 enum
+enum EventCategory {
+  EXAM          // 시험
+  CONTEST       // 공모전
+  ACTIVITY      // 대외활동
+  INTERN        // 인턴
+  VOLUNTEER     // 봉사활동
+  SCHOLARSHIP   // 장학금
+  SEMINAR       // 세미나/강연
+}
+
+// 이벤트 상태 enum
+enum EventStatus {
+  UPCOMING      // 예정
+  ONGOING       // 진행중
+  CLOSED        // 마감
+}
+
+// 통합 이벤트 테이블 (모든 소스의 정보를 통합)
+model Event {
+  id              String        @id @default(uuid())
+  title           String
+  description     String?
+  category        EventCategory
+  status          EventStatus   @default(UPCOMING)
+
+  // 날짜 정보
+  startDate       DateTime
+  endDate         DateTime?
+  deadline        DateTime?     // 지원 마감일
+
+  // 상세 정보
+  organizer       String?       // 주최기관
+  location        String?       // 장소/지역
+  field           String[]      // 분야 태그
+  targetAudience  String[]      // 대상 (대학생, 졸업생 등)
+  reward          String?       // 상금/혜택
+  url             String?       // 원본 링크
+  imageUrl        String?       // 이미지
+
+  // 데이터 소스 정보
+  source          String        // 데이터 출처 (1365, linkareer, wevity 등)
+  sourceId        String?       // 원본 사이트 ID
+  
+  createdAt       DateTime      @default(now())
+  updatedAt       DateTime      @updatedAt
+
+  // 관계
+  userEvents      UserEvent[]
+  recommendations Recommendation[]
+  guidelines      Guideline[]
+
+  @@unique([source, sourceId])
+  @@index([category, status])
+  @@index([deadline])
+  @@index([field])
+}
+
+// 사용자-이벤트 관계 (사용자가 선택/저장한 이벤트)
+model UserEvent {
+  id        String   @id @default(uuid())
+  userId    String
+  eventId   String
+  isSelected Boolean @default(false) // 참여 선택 여부
+  memo      String?
+  createdAt DateTime @default(now())
+
+  user  User  @relation(fields: [userId], references: [id])
+  event Event @relation(fields: [eventId], references: [id])
+
+  @@unique([userId, eventId])
+}
+
+// AI 추천 기록
+model Recommendation {
+  id        String   @id @default(uuid())
+  userId    String
+  eventId   String
+  score     Float    // 추천 점수 (0~1)
+  reason    String?  // 추천 이유
+  createdAt DateTime @default(now())
+
+  user  User  @relation(fields: [userId], references: [id])
+  event Event @relation(fields: [eventId], references: [id])
+
+  @@unique([userId, eventId])
+}
+
+// AI 가이드라인 (선택한 이벤트에 대한 할 일 목록)
+model Guideline {
+  id        String   @id @default(uuid())
+  eventId   String
+  title     String   // 가이드라인 제목
+  steps     Json     // 단계별 할 일 목록 (JSON)
+  tips      String?  // 추가 팁
+  timeline  Json?    // 타임라인 제안 (JSON)
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  event Event @relation(fields: [eventId], references: [id])
+}
