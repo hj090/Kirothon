@@ -29,6 +29,16 @@ class EventStatus(Enum):
 
 
 @dataclass
+class Experience:
+    """경력/활동 이력"""
+    title: str              # 경력명 (예: "ABC 해커톤 대상")
+    category: str           # 유형 (예: "공모전", "인턴", "프로젝트", "동아리")
+    description: str = ""   # 상세 설명
+    duration: str = ""      # 기간 (예: "2025.03 ~ 2025.06")
+    skills: List[str] = dataclass_field(default_factory=list)  # 사용 기술/역량
+
+
+@dataclass
 class UserProfile:
     """User 테이블 매핑"""
     id: Optional[str] = None
@@ -38,6 +48,7 @@ class UserProfile:
     major: str = ""                  # 학과
     grade: Optional[int] = None      # 학년
     interests: List[str] = dataclass_field(default_factory=list)  # 관심사
+    experiences: List[Experience] = dataclass_field(default_factory=list)  # 경력사항
 
 
 @dataclass

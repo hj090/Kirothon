@@ -1,11 +1,10 @@
 """
-메인 실행 파일 - 필터링 + AI 가이드라인 생성
-prisma/events.json에서 크롤링된 이벤트 데이터를 읽어와 필터링합니다.
+메인 실행 파일 - 통합 필터링(규칙+AI) + 가이드라인 생성
 """
 
 from datetime import datetime
 from pathlib import Path
-from models import UserProfile, Event
+from models import UserProfile, Event, Experience
 from filter_engine import filter_events
 from guide_generator import generate_guide
 from data_loader import load_from_json
@@ -30,19 +29,46 @@ def main():
         major="컴퓨터공학과",
         grade=3,
         interests=["AI", "데이터", "IT/소프트웨어"],
+        experiences=[
+            Experience(
+                title="교내 AI 챗봇 프로젝트",
+                category="프로젝트",
+                description="GPT API를 활용한 학사 안내 챗봇 개발",
+                duration="2025.09 ~ 2025.12",
+                skills=["Python", "OpenAI API", "Flask"],
+            ),
+            Experience(
+                title="네이버 부스트캠프 AI Tech",
+                category="교육",
+                description="AI 엔지니어링 집중 교육 과정 수료",
+                duration="2025.06 ~ 2025.08",
+                skills=["PyTorch", "NLP", "데이터 분석"],
+            ),
+            Experience(
+                title="스타트업 인턴 (백엔드)",
+                category="인턴",
+                description="REST API 설계 및 DB 최적화 업무",
+                duration="2025.01 ~ 2025.02",
+                skills=["Node.js", "PostgreSQL", "Docker"],
+            ),
+        ],
     )
 
     print(f"{'='*60}")
-    print(f"  Smart Calendar - 맞춤 활동 추천")
+    print(f"  Smart Calendar - AI 맞춤 활동 추천")
     print(f"{'='*60}")
     print(f"  이름: {user.name}")
     print(f"  학교: {user.university}")
     print(f"  학과: {user.major}")
     print(f"  학년: {user.grade}학년")
     print(f"  관심사: {', '.join(user.interests)}")
+    if user.experiences:
+        print(f"  경력: {len(user.experiences)}건")
+        for exp in user.experiences:
+            print(f"    - {exp.title} ({exp.category})")
     print(f"{'='*60}\n")
 
-    # prisma/events.json에서 이벤트 데이터 로드
+    # 이벤트 데이터 로드
     events_path = Path(__file__).parent / "prisma" / "events.json"
     events = load_from_json(str(events_path))
 
@@ -50,18 +76,20 @@ def main():
         print("이벤트 데이터를 불러올 수 없습니다.")
         return
 
-    print(f"총 {len(events)}개 이벤트 로드됨")
+    print(f"총 {len(events)}개 이벤트 로드됨\n")
 
-    # 필터링 실행 (관련도 25% 이상만)
-    results = filter_events(user, events, min_relevance=0.25)
+    # 통합 필터링 (규칙 40% + AI 60%)
+    results = filter_events(user, events, min_relevance=0.25, use_ai=True)
 
-    print(f"→ {len(results)}개 추천\n")
+    print(f"\n→ {len(results)}개 추천\n")
 
-    for i, (event, score) in enumerate(results, 1):
+    for i, (event, score, reason) in enumerate(results, 1):
         print(f"[{i}] {event.title}")
         print(f"    카테고리: {event.category.value}")
         print(f"    분야: {', '.join(event.field)}")
-        print(f"    관련도: {score:.1%}")
+        print(f"    적합도: {score:.1%}")
+        if reason:
+            print(f"    추천 사유: {reason}")
         print(f"    마감일: {format_deadline(event)}")
         if event.organizer:
             print(f"    주최: {event.organizer}")
@@ -73,7 +101,7 @@ def main():
         print("추천할 활동이 없습니다.")
         return
 
-    # 사용자 선택
+    # 사용자 선택 → 가이드라인 생성
     print(f"{'-'*60}")
     choice = input("가이드라인을 받고 싶은 활동 번호를 입력하세요 (0=종료): ")
 
@@ -91,7 +119,7 @@ def main():
         print("유효하지 않은 번호입니다.")
         return
 
-    selected_event, _ = results[choice_idx - 1]
+    selected_event = results[choice_idx - 1][0]
 
     print(f"\n{'='*60}")
     print(f"  [{selected_event.title}] 준비 가이드라인 생성 중...")

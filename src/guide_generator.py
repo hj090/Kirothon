@@ -20,13 +20,33 @@ def build_prompt(user: UserProfile, event: Event) -> str:
     """LLM에 전달할 프롬프트 생성"""
     deadline_str = event.deadline.strftime("%Y-%m-%d") if event.deadline else "미정"
 
+    # 경력사항 텍스트 구성
+    if user.experiences:
+        exp_lines = []
+        for exp in user.experiences:
+            line = f"  - {exp.title} ({exp.category})"
+            if exp.duration:
+                line += f" | {exp.duration}"
+            if exp.skills:
+                line += f" | 기술: {', '.join(exp.skills)}"
+            if exp.description:
+                line += f"\n    {exp.description}"
+            exp_lines.append(line)
+        experience_text = "\n".join(exp_lines)
+    else:
+        experience_text = "  없음"
+
     return f"""당신은 대학생 공모전/대외활동 준비를 도와주는 멘토입니다.
 아래 사용자 정보와 선택한 활동을 바탕으로, 활동 준비에 대한 실질적인 가이드라인을 작성해주세요.
+특히 사용자의 경력사항을 분석하여, 이미 보유한 역량은 활용 방안을 제시하고, 부족한 역량은 보완 방법을 안내해주세요.
 
 [사용자 정보]
 - 학교: {user.university}
 - 학과: {user.major}
 - 관심사: {', '.join(user.interests)}
+
+[경력사항]
+{experience_text}
 
 [선택한 활동]
 - 활동명: {event.title}
@@ -39,10 +59,11 @@ def build_prompt(user: UserProfile, event: Event) -> str:
 
 다음 항목을 포함하여 가이드라인을 작성해주세요:
 1. 활동 개요 및 핵심 포인트
-2. 준비 단계별 로드맵 (타임라인 포함)
-3. 사용자의 학과/관심사를 활용한 차별화 전략
-4. 필요한 역량 및 추천 학습 자료
-5. 주의사항 및 팁
+2. 사용자의 기존 경력/역량 활용 전략 (어떤 경험을 어떻게 살릴 수 있는지)
+3. 보완이 필요한 역량 및 학습 방법
+4. 준비 단계별 로드맵 (타임라인 포함)
+5. 차별화 전략 (경력 기반)
+6. 주의사항 및 팁
 
 간결하고 실용적으로 한국어로 작성해주세요."""
 
