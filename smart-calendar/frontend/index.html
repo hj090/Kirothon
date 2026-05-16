@@ -1,0 +1,1131 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>AI Career Agent - Proactive Dashboard</title>
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        :root {
+            --navy: #1e3a8a;
+            --navy-light: #2563eb;
+            --navy-dark: #1e2a5e;
+            --green: #10b981;
+            --green-light: #d1fae5;
+            --green-dark: #065f46;
+            --bg: #f0f4ff;
+            --card-bg: #ffffff;
+            --text: #1f2937;
+            --text-light: #6b7280;
+            --border: #e5e7eb;
+            --accent-orange: #f59e0b;
+            --accent-red: #ef4444;
+        }
+        body {
+            font-family: 'Segoe UI', -apple-system, BlinkMacSystemFont, sans-serif;
+            background: var(--bg);
+            color: var(--text);
+            line-height: 1.6;
+        }
+
+        /* Header */
+        .header {
+            background: linear-gradient(135deg, var(--navy-dark), var(--navy));
+            color: white;
+            padding: 1rem 2rem;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            box-shadow: 0 2px 12px rgba(30,58,138,0.15);
+        }
+        .header-left { display: flex; align-items: center; gap: 1rem; }
+        .logo {
+            width: 40px; height: 40px;
+            background: var(--green);
+            border-radius: 10px;
+            display: flex; align-items: center; justify-content: center;
+            font-weight: bold; font-size: 1.1rem; color: white;
+        }
+        .header h1 { font-size: 1.3rem; font-weight: 700; }
+        .header h1 span { color: var(--green); }
+        .agent-status {
+            display: flex; align-items: center; gap: 0.5rem;
+            background: rgba(16,185,129,0.15);
+            padding: 0.4rem 1rem;
+            border-radius: 20px;
+            font-size: 0.85rem;
+        }
+        .status-dot {
+            width: 8px; height: 8px;
+            background: var(--green);
+            border-radius: 50%;
+            animation: pulse 2s infinite;
+        }
+        @keyframes pulse {
+            0%, 100% { opacity: 1; transform: scale(1); }
+            50% { opacity: 0.5; transform: scale(1.3); }
+        }
+
+        /* Layout */
+        .dashboard {
+            max-width: 1400px;
+            margin: 0 auto;
+            padding: 1.5rem;
+            display: grid;
+            grid-template-columns: 320px 1fr;
+            grid-template-rows: auto auto;
+            gap: 1.5rem;
+        }
+
+        /* Cards */
+        .card {
+            background: var(--card-bg);
+            border-radius: 16px;
+            padding: 1.5rem;
+            box-shadow: 0 1px 8px rgba(0,0,0,0.06);
+            border: 1px solid var(--border);
+            transition: box-shadow 0.2s;
+        }
+        .card:hover { box-shadow: 0 4px 20px rgba(30,58,138,0.1); }
+        .card-header {
+            display: flex; align-items: center; gap: 0.6rem;
+            margin-bottom: 1.2rem;
+            padding-bottom: 0.8rem;
+            border-bottom: 1px solid var(--border);
+        }
+        .card-header .icon {
+            width: 32px; height: 32px;
+            border-radius: 8px;
+            display: flex; align-items: center; justify-content: center;
+            font-size: 1rem;
+        }
+        .card-header h2 { font-size: 1rem; font-weight: 700; }
+        .card-header .badge {
+            margin-left: auto;
+            font-size: 0.7rem;
+            padding: 0.2rem 0.6rem;
+            border-radius: 10px;
+            font-weight: 600;
+        }
+
+        /* User Monitoring Section */
+        .user-section { grid-row: 1 / 3; }
+        .profile-avatar {
+            width: 64px; height: 64px;
+            background: linear-gradient(135deg, var(--navy), var(--navy-light));
+            border-radius: 50%;
+            display: flex; align-items: center; justify-content: center;
+            color: white; font-size: 1.5rem; font-weight: 700;
+            margin: 0 auto 1rem;
+        }
+        .profile-name { text-align: center; font-weight: 700; font-size: 1.1rem; margin-bottom: 0.3rem; }
+        .profile-sub { text-align: center; color: var(--text-light); font-size: 0.85rem; margin-bottom: 1.2rem; }
+        .profile-tags { display: flex; flex-wrap: wrap; gap: 0.4rem; justify-content: center; margin-bottom: 1.5rem; }
+        .tag {
+            padding: 0.25rem 0.7rem;
+            border-radius: 12px;
+            font-size: 0.75rem;
+            font-weight: 500;
+        }
+        .tag-blue { background: #dbeafe; color: var(--navy); }
+        .tag-green { background: var(--green-light); color: var(--green-dark); }
+        .tag-orange { background: #fef3c7; color: #92400e; }
+
+        .status-section { margin-top: 1.2rem; }
+        .status-item {
+            display: flex; align-items: center; justify-content: space-between;
+            padding: 0.7rem 0;
+            border-bottom: 1px solid var(--border);
+            font-size: 0.85rem;
+        }
+        .status-item:last-child { border-bottom: none; }
+        .status-label { color: var(--text-light); }
+        .status-value { font-weight: 600; }
+        .status-active { color: var(--green); }
+
+        /* Briefing Section */
+        .briefing-section { grid-column: 2; }
+        .briefing-inner {
+            display: grid;
+            grid-template-columns: 1fr 280px;
+            gap: 1rem;
+        }
+        @media (max-width: 1100px) {
+            .briefing-inner { grid-template-columns: 1fr; }
+        }
+        .briefing-highlight {
+            background: linear-gradient(135deg, #ecfdf5, #d1fae5);
+            border: 2px solid var(--green);
+            border-radius: 12px;
+            padding: 1.2rem;
+            margin-bottom: 1rem;
+            position: relative;
+            overflow: hidden;
+        }
+        .briefing-highlight::before {
+            content: '';
+            position: absolute;
+            top: 0; left: 0;
+            width: 4px; height: 100%;
+            background: var(--green);
+        }
+        .briefing-time {
+            font-size: 0.75rem;
+            color: var(--green-dark);
+            font-weight: 600;
+            margin-bottom: 0.5rem;
+        }
+        .briefing-title { font-size: 1rem; font-weight: 700; margin-bottom: 0.4rem; }
+        .match-score {
+            display: inline-flex; align-items: center; gap: 0.3rem;
+            background: var(--green);
+            color: white;
+            padding: 0.2rem 0.7rem;
+            border-radius: 10px;
+            font-size: 0.8rem;
+            font-weight: 700;
+        }
+        .briefing-details { margin-top: 0.8rem; font-size: 0.85rem; color: var(--text); }
+        .briefing-details li { margin-bottom: 0.3rem; padding-left: 0.5rem; }
+
+        .briefing-list { list-style: none; }
+        .briefing-item-wrap {
+            margin-bottom: 0.5rem;
+            border: 1px solid var(--border);
+            border-radius: 10px;
+            padding: 0.5rem 0.8rem;
+            transition: background 0.2s;
+        }
+        .briefing-item-wrap:hover { background: #f9fafb; }
+        .briefing-item-wrap .briefing-item { border: none; padding: 0.3rem 0; margin-bottom: 0; }
+        .briefing-item {
+            display: flex; align-items: center; gap: 1rem;
+            padding: 0.8rem;
+            border-radius: 10px;
+            margin-bottom: 0.5rem;
+            border: 1px solid var(--border);
+            transition: background 0.2s;
+        }
+        .briefing-item:hover { background: #f9fafb; }
+        a.briefing-item { cursor: pointer; }
+        a.briefing-item:hover { background: #eef6ff; border-color: var(--navy-light); }
+        a.briefing-highlight:hover { border-color: var(--green-dark); box-shadow: 0 4px 16px rgba(16,185,129,0.15); }
+        .briefing-item .score {
+            min-width: 48px;
+            text-align: center;
+            font-weight: 700;
+            font-size: 0.9rem;
+            padding: 0.3rem;
+            border-radius: 8px;
+        }
+        .score-high { background: var(--green-light); color: var(--green-dark); }
+        .score-mid { background: #fef3c7; color: #92400e; }
+        .briefing-item .info { flex: 1; }
+        .briefing-item .info h4 { font-size: 0.85rem; font-weight: 600; }
+        .briefing-item .info p { font-size: 0.75rem; color: var(--text-light); }
+        .briefing-item .deadline {
+            font-size: 0.75rem;
+            color: var(--accent-red);
+            font-weight: 600;
+            white-space: nowrap;
+        }
+
+        /* Gap Analysis & Action Plan */
+        .action-section { grid-column: 2; }
+        .gap-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 1rem; margin-bottom: 1.2rem; }
+        .gap-card {
+            padding: 1rem;
+            border-radius: 10px;
+            border: 1px solid var(--border);
+        }
+        .gap-card h4 { font-size: 0.8rem; color: var(--text-light); margin-bottom: 0.6rem; text-transform: uppercase; letter-spacing: 0.5px; }
+        .gap-card ul { list-style: none; font-size: 0.85rem; }
+        .gap-card li { padding: 0.3rem 0; display: flex; align-items: center; gap: 0.4rem; }
+        .gap-card li::before { font-size: 0.7rem; }
+        .has-skill li::before { content: '✓'; color: var(--green); font-weight: bold; }
+        .needs-skill li::before { content: '△'; color: var(--accent-orange); font-weight: bold; }
+
+        /* Timeline */
+        .timeline { position: relative; padding-left: 1.5rem; }
+        .timeline::before {
+            content: '';
+            position: absolute;
+            left: 6px; top: 0; bottom: 0;
+            width: 2px;
+            background: linear-gradient(to bottom, var(--green), var(--navy-light));
+        }
+        .timeline-item {
+            position: relative;
+            padding-bottom: 1.2rem;
+            padding-left: 1rem;
+        }
+        .timeline-item::before {
+            content: '';
+            position: absolute;
+            left: -1.5rem; top: 4px;
+            width: 12px; height: 12px;
+            border-radius: 50%;
+            background: var(--green);
+            border: 2px solid white;
+            box-shadow: 0 0 0 2px var(--green);
+        }
+        .timeline-item.future::before { background: var(--navy-light); box-shadow: 0 0 0 2px var(--navy-light); }
+        .timeline-date { font-size: 0.75rem; color: var(--text-light); font-weight: 600; }
+        .timeline-content { font-size: 0.85rem; font-weight: 500; }
+        .timeline-sub { font-size: 0.75rem; color: var(--text-light); }
+
+        /* Progress bar */
+        .progress-bar {
+            width: 100%;
+            height: 6px;
+            background: #e5e7eb;
+            border-radius: 3px;
+            margin-top: 0.5rem;
+            overflow: hidden;
+        }
+        .progress-fill {
+            height: 100%;
+            border-radius: 3px;
+            background: linear-gradient(90deg, var(--green), var(--navy-light));
+            transition: width 1s ease;
+        }
+
+        /* Responsive */
+        @media (max-width: 900px) {
+            .dashboard {
+                grid-template-columns: 1fr;
+            }
+            .user-section { grid-row: auto; }
+            .gap-grid { grid-template-columns: 1fr; }
+        }
+
+        /* View Toggle Buttons */
+        .view-toggle {
+            flex: 1;
+            padding: 0.6rem 1rem;
+            border: 2px solid var(--border);
+            border-radius: 10px;
+            background: white;
+            font-size: 0.85rem;
+            font-weight: 600;
+            color: var(--text-light);
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+        .view-toggle:hover { border-color: var(--navy-light); color: var(--navy); }
+        .view-toggle.active {
+            border-color: var(--navy);
+            background: var(--navy);
+            color: white;
+        }
+
+        /* Calendar Grid */
+        .calendar-grid {
+            display: grid;
+            grid-template-columns: repeat(7, 1fr);
+            gap: 2px;
+            font-size: 0.75rem;
+        }
+        .cal-day-name {
+            text-align: center;
+            font-weight: 700;
+            color: var(--text-light);
+            padding: 0.4rem 0;
+            font-size: 0.7rem;
+        }
+        .cal-cell {
+            min-height: 70px;
+            border: 1px solid var(--border);
+            border-radius: 6px;
+            padding: 0.3rem;
+            background: white;
+            transition: background 0.2s;
+        }
+        .cal-cell.empty { border: none; background: transparent; }
+        .cal-cell.today { background: #eff6ff; border-color: var(--navy-light); }
+        .cal-date { font-weight: 700; font-size: 0.7rem; color: var(--text); margin-bottom: 0.2rem; }
+        .cal-event {
+            font-size: 0.65rem;
+            padding: 0.15rem 0.3rem;
+            border-radius: 4px;
+            margin-bottom: 0.15rem;
+            line-height: 1.3;
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+        }
+        .cal-event.agent { background: var(--green-light); color: var(--green-dark); }
+        .cal-event.personal { background: #fef3c7; color: #92400e; }
+
+        /* Calendar period bar */
+        .cal-period-bar {
+            height: 4px;
+            background: linear-gradient(90deg, var(--navy), var(--navy-light));
+            border-radius: 2px;
+            margin: 0.2rem 0;
+        }
+        .cal-period-bar.start { border-radius: 2px 0 0 2px; margin-right: -3px; }
+        .cal-period-bar.middle { border-radius: 0; margin-left: -3px; margin-right: -3px; }
+        .cal-period-bar.end { border-radius: 0 2px 2px 0; margin-left: -3px; }
+        .cal-period-bar.single { border-radius: 2px; }
+        .cal-period-label {
+            font-size: 0.6rem;
+            color: var(--navy);
+            font-weight: 600;
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+        }
+        .cal-task-text {
+            font-size: 0.63rem;
+            color: var(--text);
+            line-height: 1.4;
+            margin-top: 0.15rem;
+        }
+        .cal-personal-text {
+            font-size: 0.63rem;
+            color: #92400e;
+            font-weight: 500;
+            margin-top: 0.1rem;
+        }
+
+        /* Settings Modal */
+        .modal-overlay {
+            display: none;
+            position: fixed;
+            top: 0; left: 0; right: 0; bottom: 0;
+            background: rgba(0,0,0,0.5);
+            z-index: 1000;
+            align-items: center;
+            justify-content: center;
+        }
+        .modal-overlay.show { display: flex; }
+        .modal {
+            background: white;
+            border-radius: 16px;
+            padding: 2rem;
+            width: 90%;
+            max-width: 500px;
+            max-height: 85vh;
+            overflow-y: auto;
+            box-shadow: 0 20px 60px rgba(0,0,0,0.2);
+        }
+        .modal h2 { font-size: 1.1rem; margin-bottom: 1.2rem; color: var(--navy); }
+        .modal-field { margin-bottom: 1rem; }
+        .modal-field label {
+            display: block;
+            font-size: 0.8rem;
+            font-weight: 600;
+            color: var(--text-light);
+            margin-bottom: 0.3rem;
+        }
+        .modal-field input, .modal-field select {
+            width: 100%;
+            padding: 0.6rem 0.8rem;
+            border: 1px solid var(--border);
+            border-radius: 8px;
+            font-size: 0.85rem;
+            outline: none;
+            transition: border-color 0.2s;
+        }
+        .modal-field input:focus, .modal-field select:focus { border-color: var(--navy-light); }
+        .modal-actions {
+            display: flex;
+            gap: 0.8rem;
+            margin-top: 1.5rem;
+        }
+        .modal-actions button {
+            flex: 1;
+            padding: 0.7rem;
+            border-radius: 10px;
+            font-size: 0.85rem;
+            font-weight: 600;
+            cursor: pointer;
+            border: none;
+            transition: opacity 0.2s;
+        }
+        .modal-actions button:hover { opacity: 0.85; }
+        .btn-save { background: var(--navy); color: white; }
+        .btn-cancel { background: var(--border); color: var(--text); }
+
+        /* Settings button */
+        .settings-btn {
+            display: block;
+            width: 100%;
+            margin-top: 1.2rem;
+            padding: 0.7rem;
+            border: 1px dashed var(--border);
+            border-radius: 10px;
+            background: #f9fafb;
+            color: var(--text-light);
+            font-size: 0.8rem;
+            font-weight: 500;
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+        .settings-btn:hover { border-color: var(--navy-light); color: var(--navy); background: #eff6ff; }
+
+        /* Feedback buttons */
+        .feedback-row {
+            display: flex;
+            gap: 0.4rem;
+            margin-top: 0.5rem;
+            padding-top: 0.5rem;
+            border-top: 1px dashed var(--border);
+        }
+        .feedback-btn {
+            padding: 0.3rem 0.7rem;
+            border-radius: 14px;
+            font-size: 0.7rem;
+            font-weight: 600;
+            border: 1px solid var(--border);
+            background: white;
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+        .feedback-btn:hover { transform: scale(1.05); }
+        .feedback-btn.like { color: var(--green-dark); border-color: var(--green); }
+        .feedback-btn.like:hover { background: var(--green-light); }
+        .feedback-btn.like.active { background: var(--green); color: white; border-color: var(--green); }
+        .feedback-btn.dislike { color: #dc2626; border-color: #fca5a5; }
+        .feedback-btn.dislike:hover { background: #fef2f2; }
+        .feedback-btn.dislike.active { background: #dc2626; color: white; border-color: #dc2626; }
+        .feedback-btn.active { pointer-events: none; }
+        .feedback-toast {
+            position: fixed;
+            bottom: 2rem;
+            left: 50%;
+            transform: translateX(-50%) translateY(20px);
+            background: var(--navy);
+            color: white;
+            padding: 0.7rem 1.5rem;
+            border-radius: 10px;
+            font-size: 0.85rem;
+            font-weight: 500;
+            opacity: 0;
+            transition: all 0.3s;
+            z-index: 2000;
+            pointer-events: none;
+        }
+        .feedback-toast.show { opacity: 1; transform: translateX(-50%) translateY(0); }
+
+        /* Feedback Panel */
+        .feedback-panel {
+            background: #f9fafb;
+            border: 1px solid var(--border);
+            border-radius: 12px;
+            padding: 1rem;
+            height: fit-content;
+        }
+        .feedback-panel h3 {
+            font-size: 0.85rem;
+            font-weight: 700;
+            color: var(--navy);
+            margin-bottom: 0.8rem;
+        }
+        .fb-program {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            padding: 0.5rem 0;
+            border-bottom: 1px solid var(--border);
+            font-size: 0.75rem;
+        }
+        .fb-program:last-of-type { border-bottom: none; }
+        .fb-program-name {
+            flex: 1;
+            font-weight: 500;
+            color: var(--text);
+            line-height: 1.3;
+        }
+        .fb-btns { display: flex; gap: 0.3rem; flex-shrink: 0; }
+        .fb-btn {
+            width: 28px; height: 28px;
+            border-radius: 50%;
+            border: 1px solid var(--border);
+            background: white;
+            cursor: pointer;
+            font-size: 0.75rem;
+            display: flex; align-items: center; justify-content: center;
+            transition: all 0.2s;
+        }
+        .fb-btn:hover { transform: scale(1.15); }
+        .fb-btn.like-active { background: var(--green); border-color: var(--green); }
+        .fb-btn.dislike-active { background: #ef4444; border-color: #ef4444; }
+        .fb-textarea {
+            width: 100%;
+            margin-top: 0.8rem;
+            padding: 0.6rem;
+            border: 1px solid var(--border);
+            border-radius: 8px;
+            font-size: 0.75rem;
+            resize: vertical;
+            min-height: 60px;
+            outline: none;
+            font-family: inherit;
+            transition: border-color 0.2s;
+        }
+        .fb-textarea:focus { border-color: var(--navy-light); }
+        .fb-submit {
+            width: 100%;
+            margin-top: 0.5rem;
+            padding: 0.5rem;
+            background: var(--navy);
+            color: white;
+            border: none;
+            border-radius: 8px;
+            font-size: 0.8rem;
+            font-weight: 600;
+            cursor: pointer;
+            transition: opacity 0.2s;
+        }
+        .fb-submit:hover { opacity: 0.85; }
+</style>
+</head>
+<body>
+    <!-- Header -->
+    <header class="header">
+        <div class="header-left">
+            <div class="logo">SC</div>
+            <h1>SSG <span>Campus</span></h1>
+        </div>
+        <div class="agent-status">
+            <div class="status-dot"></div>
+            <span>에이전트 활성 · 마지막 스캔: 오늘 04:32 AM</span>
+        </div>
+    </header>
+
+    <!-- Dashboard Grid -->
+    <main class="dashboard">
+
+        <!-- [1] User Monitoring Section -->
+        <section class="card user-section">
+            <div class="card-header">
+                <div class="icon" style="background:#dbeafe;color:var(--navy);">👤</div>
+                <h2>프로필</h2>
+                <span class="badge" style="background:var(--green-light);color:var(--green-dark);">LIVE</span>
+            </div>
+
+            <div class="profile-avatar">-</div>
+            <div class="profile-name">로딩 중...</div>
+            <div class="profile-sub">-</div>
+
+            <div class="profile-tags">
+            </div>
+
+            <div class="status-section">
+                <h3 style="font-size:0.85rem;font-weight:700;margin-bottom:0.5rem;color:var(--navy);">📊 현재 상태 트래킹</h3>
+                <div class="status-item">
+                    <span class="status-label">학교</span>
+                    <span class="status-value">-</span>
+                </div>
+                <div class="status-item">
+                    <span class="status-label">학과</span>
+                    <span class="status-value">-</span>
+                </div>
+                <div class="status-item">
+                    <span class="status-label">학업 상태</span>
+                    <span class="status-value status-active">● 시험 종료 (활동 최적기)</span>
+                </div>
+                <div class="status-item">
+                    <span class="status-label">성적</span>
+                    <span class="status-value">GPA 3.8 / 4.5</span>
+                </div>
+                <div class="status-item">
+                    <span class="status-label">관심사</span>
+                    <span class="status-value">-</span>
+                </div>
+                <div class="status-item">
+                    <span class="status-label">활동 가용 시간</span>
+                    <span class="status-value">주 30시간+</span>
+                </div>
+                <div class="status-item">
+                    <span class="status-label">선호 활동 유형</span>
+                    <span class="status-value">대외활동 · 공모전</span>
+                </div>
+                <div class="status-item">
+                    <span class="status-label">어학 역량</span>
+                    <span class="status-value">영어 (중상) · 불어 (초급)</span>
+                </div>
+                <div class="status-item">
+                    <span class="status-label">에이전트 모니터링</span>
+                    <span class="status-value status-active">● 24/7 활성</span>
+                </div>
+            </div>
+
+            <div style="margin-top:1.2rem;">
+                <h3 style="font-size:0.85rem;font-weight:700;margin-bottom:0.5rem;color:var(--navy);">🎯 역량 프로필</h3>
+                <div style="font-size:0.8rem;margin-bottom:0.4rem;">국제개발 이해도</div>
+                <div class="progress-bar"><div class="progress-fill" style="width:75%;"></div></div>
+                <div style="font-size:0.8rem;margin-top:0.6rem;margin-bottom:0.4rem;">팀 프로젝트 경험</div>
+                <div class="progress-bar"><div class="progress-fill" style="width:40%;"></div></div>
+                <div style="font-size:0.8rem;margin-top:0.6rem;margin-bottom:0.4rem;">보고서 작성 능력</div>
+                <div class="progress-bar"><div class="progress-fill" style="width:60%;"></div></div>
+                <div style="font-size:0.8rem;margin-top:0.6rem;margin-bottom:0.4rem;">데이터 분석</div>
+                <div class="progress-bar"><div class="progress-fill" style="width:25%;"></div></div>
+            </div>
+
+            <button class="settings-btn" onclick="openSettings()">⚙️ 프로필 정보 수정</button>
+        </section>
+
+        <!-- [2] Proactive Briefing Section -->
+        <section class="card briefing-section">
+            <div class="card-header">
+                <div class="icon" style="background:var(--green-light);color:var(--green-dark);">🔔</div>
+                <h2>브리핑</h2>
+                <span class="badge" style="background:#fef3c7;color:#92400e;">NEW 3건</span>
+            </div>
+
+            <div class="briefing-inner">
+                <!-- Left: Recommendations -->
+                <div>
+                    <!-- Top Match Highlight -->
+                    <a href="https://linkareer.com/activity/209330" target="_blank" rel="noopener" class="briefing-highlight" style="display:block;text-decoration:none;color:inherit;cursor:pointer;">
+                        <div class="briefing-time">🤖 에이전트가 오늘 새벽 04:32에 발견 · <span style="color:var(--navy-light);">클릭하여 지원 페이지로 →</span></div>
+                        <div class="briefing-title">
+                            KOICA 대학생 국제개발협력 서포터즈 7기
+                            <span class="match-score">⚡ 95% 매칭</span>
+                        </div>
+                        <ul class="briefing-details">
+                            <li>📌 모집 기간: 2026.05.20 ~ 2026.06.10</li>
+                            <li>📌 활동 기간: 2026.07 ~ 2026.12 (6개월)</li>
+                            <li>📌 매칭 근거: ODA 관심사 + 글로벌 전공 + 1학년 지원 가능</li>
+                            <li>📌 우대사항: 국제개발 수업 이수, 영어 가능자, SNS 콘텐츠 경험</li>
+                        </ul>
+                    </a>
+
+                    <!-- Other Matches -->
+                    <ul class="briefing-list">
+                        <li class="briefing-item-wrap">
+                            <a href="https://linkareer.com/activity/217f" target="_blank" rel="noopener" class="briefing-item" style="text-decoration:none;color:inherit;">
+                                <div class="info">
+                                    <h4>UN Youth Delegate 프로그램 (외교부)</h4>
+                                    <p>SDGs 관심 대학생 대상 · 글로벌 거버넌스 경험</p>
+                                </div>
+                                <div class="deadline">D-14 →</div>
+                            </a>
+                        </li>
+                        <li class="briefing-item-wrap">
+                            <a href="https://linkareer.com/activity/216845" target="_blank" rel="noopener" class="briefing-item" style="text-decoration:none;color:inherit;">
+                                <div class="info">
+                                    <h4>월드프렌즈 ICT 봉사단 (NIPA)</h4>
+                                    <p>개발도상국 IT 교육 봉사 · 6주 파견</p>
+                                </div>
+                                <div class="deadline">D-21 →</div>
+                            </a>
+                        </li>
+                        <li class="briefing-item-wrap">
+                            <a href="https://linkareer.com/activity/218012" target="_blank" rel="noopener" class="briefing-item" style="text-decoration:none;color:inherit;">
+                                <div class="info">
+                                    <h4>국제개발협력 에세이 공모전 (한국국제협력단)</h4>
+                                    <p>ODA 정책 제안 에세이 · 상금 200만원</p>
+                                </div>
+                                <div class="deadline">D-30 →</div>
+                            </a>
+                        </li>
+                    </ul>
+
+                    <div style="margin-top:1rem;padding:0.8rem;background:#f0f4ff;border-radius:8px;font-size:0.8rem;color:var(--navy);">
+                        💡 <strong>에이전트 인사이트:</strong> 현재 시험 종료 직후로 활동 시작 최적기입니다. KOICA 서포터즈는 지원 마감까지 25일 남았으며, 귀하의 프로필과 가장 높은 적합도를 보입니다.
+                    </div>
+                </div>
+
+                <!-- Right: Feedback Panel -->
+                <div class="feedback-panel">
+                    <h3>💬 추천 피드백</h3>
+                    <p style="font-size:0.7rem;color:var(--text-light);margin-bottom:0.8rem;">관심 여부를 표시하면 추천이 더 정확해져요</p>
+
+                    <div class="fb-program">
+                        <span class="fb-program-name">KOICA 서포터즈</span>
+                        <div class="fb-btns">
+                            <button class="fb-btn" onclick="toggleFb(this,'like')" title="관심 있음">👍</button>
+                            <button class="fb-btn" onclick="toggleFb(this,'dislike')" title="관심 없음">👎</button>
+                        </div>
+                    </div>
+                    <div class="fb-program">
+                        <span class="fb-program-name">UN Youth Delegate</span>
+                        <div class="fb-btns">
+                            <button class="fb-btn" onclick="toggleFb(this,'like')" title="관심 있음">👍</button>
+                            <button class="fb-btn" onclick="toggleFb(this,'dislike')" title="관심 없음">👎</button>
+                        </div>
+                    </div>
+                    <div class="fb-program">
+                        <span class="fb-program-name">월드프렌즈 ICT</span>
+                        <div class="fb-btns">
+                            <button class="fb-btn" onclick="toggleFb(this,'like')" title="관심 있음">👍</button>
+                            <button class="fb-btn" onclick="toggleFb(this,'dislike')" title="관심 없음">👎</button>
+                        </div>
+                    </div>
+                    <div class="fb-program">
+                        <span class="fb-program-name">에세이 공모전</span>
+                        <div class="fb-btns">
+                            <button class="fb-btn" onclick="toggleFb(this,'like')" title="관심 있음">👍</button>
+                            <button class="fb-btn" onclick="toggleFb(this,'dislike')" title="관심 없음">👎</button>
+                        </div>
+                    </div>
+
+                    <textarea class="fb-textarea" id="fbText" placeholder="추가 피드백을 자유롭게 적어주세요.&#10;예) 해외 파견보다 국내 활동을 선호해요.&#10;예) IT 관련은 관심 없어요."></textarea>
+                    <button class="fb-submit" onclick="submitFeedback()">피드백 전송</button>
+                </div>
+            </div>
+        </section>
+
+        <!-- [3] Gap Analysis & Action Plan -->
+        <section class="card action-section">
+            <div class="card-header">
+                <div class="icon" style="background:#ede9fe;color:#6d28d9;">📋</div>
+                <h2>프로그램 분석 & 플랜</h2>
+                <span class="badge" style="background:var(--green-light);color:var(--green-dark);">AI 자동 수립</span>
+            </div>
+
+            <!-- Program Selector -->
+            <div style="margin-bottom:1rem;">
+                <label style="font-size:0.8rem;color:var(--text-light);display:block;margin-bottom:0.4rem;">🎯 분석 대상 프로그램 선택</label>
+                <select id="programSelect" onchange="switchProgram(this.value)" style="width:100%;padding:0.7rem 1rem;border-radius:10px;border:2px solid var(--navy-light);font-size:0.9rem;font-weight:600;color:var(--navy);background:white;cursor:pointer;outline:none;transition:border-color 0.2s;">
+                    <option value="koica">KOICA 대학생 국제개발협력 서포터즈 7기 (95% 매칭)</option>
+                    <option value="unyouth">UN Youth Delegate 프로그램 - 외교부 (88% 매칭)</option>
+                    <option value="worldfriends">월드프렌즈 ICT 봉사단 - NIPA (82% 매칭)</option>
+                    <option value="essay">국제개발협력 에세이 공모전 - 한국국제협력단 (74% 매칭)</option>
+                </select>
+            </div>
+
+            <!-- Gap Grid (dynamic) -->
+            <div id="gapArea"></div>
+
+            <!-- View Toggle: Action Plan vs Monthly Schedule vs AI Guide -->
+            <div style="display:flex;gap:0.5rem;margin-bottom:1rem;">
+                <button id="btnAction" onclick="switchView('action')" class="view-toggle active">📝 AI 액션 플랜</button>
+                <button id="btnCalendar" onclick="switchView('calendar')" class="view-toggle">📅 월간 스케줄</button>
+                <button id="btnGuide" onclick="switchView('guide')" class="view-toggle">🤖 AI 가이드라인</button>
+            </div>
+
+            <!-- Action Plan View -->
+            <div id="actionView"></div>
+
+            <!-- Monthly Calendar View -->
+            <div id="calendarView" style="display:none;"></div>
+
+            <!-- AI Guideline View -->
+            <div id="guideView" style="display:none;">
+                <div style="text-align:center;padding:2rem;color:var(--text-light);">
+                    <p>선택한 프로그램에 대한 AI 준비 가이드라인을 생성합니다.</p>
+                    <button onclick="requestGuide()" style="margin-top:1rem;padding:0.8rem 2rem;background:var(--navy);color:white;border:none;border-radius:10px;font-size:0.9rem;font-weight:600;cursor:pointer;">🤖 가이드라인 생성하기</button>
+                </div>
+            </div>
+
+        </section>
+
+    </main>
+
+    <!-- Footer -->
+    <footer style="text-align:center;padding:1.5rem;color:var(--text-light);font-size:0.8rem;">
+        AI Career Agent v1.0 · 에이전트가 24시간 당신의 커리어를 모니터링합니다 · Built for AI Hackathon 2026
+    </footer>
+
+    <!-- Feedback Toast -->
+    <div class="feedback-toast" id="feedbackToast"></div>
+
+    <!-- Settings Modal -->
+    <div class="modal-overlay" id="settingsModal" style="margin-top:0;">
+        <div class="modal">
+            <h2>⚙️ 프로필 정보 수정</h2>
+            <div class="modal-field">
+                <label>이름</label>
+                <input type="text" id="setName" value="">
+            </div>
+            <div class="modal-field">
+                <label>전공</label>
+                <input type="text" id="setMajor" value="">
+            </div>
+            <div class="modal-field">
+                <label>학년</label>
+                <select id="setYear">
+                    <option value="1" selected>1학년</option>
+                    <option value="2">2학년</option>
+                    <option value="3">3학년</option>
+                    <option value="4">4학년</option>
+                </select>
+            </div>
+            <div class="modal-field">
+                <label>관심 분야 (쉼표로 구분)</label>
+                <input type="text" id="setInterests" value="">
+            </div>
+            <div class="modal-field">
+                <label>선호 활동 유형</label>
+                <input type="text" id="setActivityType" value="대외활동, 공모전">
+            </div>
+            <div class="modal-field">
+                <label>어학 역량</label>
+                <input type="text" id="setLanguage" value="영어 (중상), 불어 (초급)">
+            </div>
+            <div class="modal-field">
+                <label>학업 상태</label>
+                <select id="setStatus">
+                    <option value="시험 종료 (활동 최적기)" selected>시험 종료 (활동 최적기)</option>
+                    <option value="시험 기간">시험 기간</option>
+                    <option value="방학 중">방학 중</option>
+                    <option value="수업 기간">수업 기간</option>
+                </select>
+            </div>
+            <div class="modal-field">
+                <label>주간 활동 가용 시간</label>
+                <select id="setHours">
+                    <option value="10시간 이하">10시간 이하</option>
+                    <option value="10~20시간">10~20시간</option>
+                    <option value="주 30시간+" selected>주 30시간+</option>
+                    <option value="풀타임 가능">풀타임 가능</option>
+                </select>
+            </div>
+            <div class="modal-actions">
+                <button class="btn-cancel" onclick="closeSettings()">취소</button>
+                <button class="btn-save" onclick="saveSettings()">저장</button>
+            </div>
+        </div>
+    </div>
+
+    <script>
+    // ============ API 설정 ============
+    const API_BASE = 'http://localhost:5000';
+
+    // ============ 상태 관리 ============
+    let profileData = {};
+    let recommendations = [];
+    let currentProgram = 0;
+    let currentView = 'action';
+    const personalSchedule = JSON.parse(localStorage.getItem('personalSchedule') || '{}');
+
+    // ============ 초기화 ============
+    async function init() {
+        await loadProfile();
+        await loadRecommendations();
+    }
+
+    async function loadProfile() {
+        try {
+            const res = await fetch(`${API_BASE}/api/profile`);
+            profileData = await res.json();
+            renderProfile(profileData);
+        } catch (e) {
+            console.error('프로필 로드 실패:', e);
+            showToast('⚠️ 백엔드 연결 실패. python api_server.py를 실행하세요.');
+        }
+    }
+
+    async function loadRecommendations() {
+        try {
+            const res = await fetch(`${API_BASE}/api/recommendations?min_relevance=0.10&use_ai=false`);
+            const data = await res.json();
+            recommendations = data.recommendations || [];
+            renderBriefing(recommendations);
+            renderFeedbackPanel(recommendations);
+            if (recommendations.length > 0) {
+                currentProgram = 0;
+                renderProgramSelector(recommendations);
+                renderGap(recommendations[0]);
+                renderActionView(recommendations[0]);
+                renderCalendarView(recommendations[0]);
+            }
+        } catch (e) { console.error('추천 로드 실패:', e); }
+    }
+
+    async function saveProfileToServer() {
+        const name = document.getElementById('setName').value;
+        const major = document.getElementById('setMajor').value;
+        const year = parseInt(document.getElementById('setYear').value);
+        const interests = document.getElementById('setInterests').value.split(',').map(s => s.trim()).filter(s => s);
+        try {
+            await fetch(`${API_BASE}/api/profile`, {
+                method: 'PUT',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ name, major, grade: year, interests, university: profileData.university || '', experiences: [] })
+            });
+            showToast('✅ 프로필 저장 완료. 추천을 다시 불러옵니다.');
+            closeSettings();
+            await loadProfile();
+            await loadRecommendations();
+        } catch (e) { showToast('⚠️ 저장 실패'); }
+    }
+
+    // ============ 렌더링 ============
+    function renderProfile(p) {
+        document.querySelector('.profile-name').textContent = p.name;
+        document.querySelector('.profile-avatar').textContent = p.name.charAt(0);
+        document.querySelector('.profile-sub').textContent = p.major + ' · ' + p.grade + '학년';
+        const tags = document.querySelector('.profile-tags');
+        const colors = ['tag-blue','tag-green','tag-orange','tag-blue'];
+        tags.innerHTML = p.interests.map((t,i) => `<span class="tag ${colors[i%colors.length]}">${t}</span>`).join('');
+        const items = document.querySelectorAll('.status-item .status-value');
+        if (items.length >= 5) {
+            items[0].textContent = p.university;
+            items[1].textContent = p.major;
+            items[4].textContent = p.interests.join(' · ');
+        }
+    }
+
+    function renderBriefing(recs) {
+        const container = document.querySelector('.briefing-inner > div:first-child');
+        if (!recs || recs.length === 0) { container.innerHTML = '<p style="color:var(--text-light);padding:2rem;text-align:center;">추천할 활동이 없습니다.</p>'; return; }
+        const top = recs[0];
+        let html = `<a href="${top.url||'#'}" target="_blank" class="briefing-highlight" style="display:block;text-decoration:none;color:inherit;">
+            <div class="briefing-time">🤖 에이전트 분석 완료${top.url?' · <span style=color:var(--navy-light)>클릭하여 지원 →</span>':''}</div>
+            <div class="briefing-title">${top.title} <span class="match-score">⚡ ${top.score}% 매칭</span></div>
+            <ul class="briefing-details">
+                <li>📌 카테고리: ${top.category} · 분야: ${top.field.join(', ')}</li>
+                ${top.deadline?`<li>📌 마감: ${new Date(top.deadline).toLocaleDateString('ko-KR')} (D-${top.dday})</li>`:''}
+                ${top.organizer?`<li>📌 주최: ${top.organizer}</li>`:''}
+                ${top.reward?`<li>📌 혜택: ${top.reward}</li>`:''}
+                ${top.reason?`<li>📌 추천 사유: ${top.reason}</li>`:''}
+            </ul></a>`;
+        if (recs.length > 1) {
+            html += '<ul class="briefing-list">';
+            recs.slice(1,6).forEach(r => {
+                html += `<li class="briefing-item-wrap"><a href="${r.url||'#'}" target="_blank" class="briefing-item" style="text-decoration:none;color:inherit;">
+                    <div class="score ${r.score>=50?'score-high':'score-mid'}">${r.score}%</div>
+                    <div class="info"><h4>${r.title}</h4><p>${r.field.join(', ')}${r.organizer?' · '+r.organizer:''}</p></div>
+                    ${r.dday!=null?`<div class="deadline">D-${r.dday} →</div>`:''}
+                </a></li>`;
+            });
+            html += '</ul>';
+        }
+        html += `<div style="margin-top:1rem;padding:0.8rem;background:#f0f4ff;border-radius:8px;font-size:0.8rem;color:var(--navy);">💡 <strong>에이전트 인사이트:</strong> 총 ${recs.length}개 활동이 프로필과 매칭되었습니다.</div>`;
+        container.innerHTML = html;
+    }
+
+    function renderFeedbackPanel(recs) {
+        const panel = document.querySelector('.feedback-panel');
+        if (!panel || !recs.length) return;
+        let html = `<h3>💬 추천 피드백</h3><p style="font-size:0.7rem;color:var(--text-light);margin-bottom:0.8rem;">관심 여부를 표시하면 추천이 더 정확해져요</p>`;
+        recs.slice(0,5).forEach(r => {
+            const short = r.title.length > 18 ? r.title.substring(0,18)+'...' : r.title;
+            html += `<div class="fb-program"><span class="fb-program-name">${short}</span><div class="fb-btns">
+                <button class="fb-btn" onclick="toggleFb(this,'like')">👍</button>
+                <button class="fb-btn" onclick="toggleFb(this,'dislike')">👎</button></div></div>`;
+        });
+        html += `<textarea class="fb-textarea" id="fbText" placeholder="추가 피드백을 자유롭게 적어주세요."></textarea><button class="fb-submit" onclick="submitFeedback()">피드백 전송</button>`;
+        panel.innerHTML = html;
+    }
+
+    function renderProgramSelector(recs) {
+        const sel = document.getElementById('programSelect');
+        if (!sel) return;
+        sel.innerHTML = recs.slice(0,5).map((r,i) => `<option value="${i}">${r.title} (${r.score}%)</option>`).join('');
+    }
+
+    function renderGap(rec) {
+        const area = document.getElementById('gapArea');
+        if (!area) return;
+        const strengths = [], gaps = [];
+        if (profileData.major) strengths.push(`${profileData.major} 재학`);
+        const matched = (profileData.interests||[]).filter(i => rec.field.some(f => f.includes(i)||i.includes(f)));
+        if (matched.length) strengths.push(`관심사 매칭: ${matched.join(', ')}`);
+        if (rec.score >= 70) strengths.push('높은 적합도');
+        if (rec.targetAudience && rec.targetAudience.includes('대학생')) strengths.push('대학생 대상');
+        if (!strengths.length) strengths.push('지원 자격 충족');
+        gaps.push(`${rec.field[0]||rec.category} 실무 경험 보완 필요`);
+        gaps.push('자기소개서 준비 필요');
+        if (rec.dday && rec.dday < 14) gaps.push('마감 임박 - 빠른 준비 필요');
+        area.innerHTML = `<div class="gap-grid"><div class="gap-card has-skill"><h4>✅ 보유 역량</h4><ul>${strengths.map(s=>`<li>${s}</li>`).join('')}</ul></div><div class="gap-card needs-skill"><h4>⚠️ 보완 필요</h4><ul>${gaps.map(g=>`<li>${g}</li>`).join('')}</ul></div></div>`;
+    }
+
+    function renderActionView(rec) {
+        const view = document.getElementById('actionView');
+        if (!view) return;
+        const dday = rec.dday || 30;
+        const phases = [
+            {r:0.2, t:'리서치 & 정보 수집', s:`${rec.title} 관련 자료 조사`},
+            {r:0.25, t:'역량 보완 & 준비', s:'부족한 역량 학습, 경험 정리'},
+            {r:0.25, t:'지원서 작성', s:'자기소개서 초안, 활동 계획서'},
+            {r:0.15, t:'피드백 & 수정', s:'피드백 반영, 문장 다듬기'},
+            {r:0.15, t:'최종 점검 & 제출', s:'서류 최종 검토 후 제출'}
+        ];
+        const today = new Date(); let offset = 0;
+        let html = `<h3 style="font-size:0.9rem;font-weight:700;margin-bottom:1rem;color:var(--navy);">🗓️ AI 액션 플랜 (D-${dday})</h3><div class="timeline">`;
+        phases.forEach((p,i) => {
+            const days = Math.max(Math.round(dday*p.r),1);
+            const s = new Date(today); s.setDate(s.getDate()+offset);
+            const e = new Date(today); e.setDate(e.getDate()+offset+days-1);
+            offset += days;
+            html += `<div class="timeline-item ${i>=2?'future':''}"><div class="timeline-date">${s.getMonth()+1}/${s.getDate()} ~ ${e.getMonth()+1}/${e.getDate()} (${days}일)</div><div class="timeline-content">${p.t}</div><div class="timeline-sub">${p.s}</div></div>`;
+        });
+        html += `</div><div style="margin-top:1.2rem;padding:0.8rem;background:linear-gradient(135deg,#ecfdf5,#f0f4ff);border-radius:8px;font-size:0.8rem;border:1px solid var(--green);">🤖 마감일(${rec.deadline?new Date(rec.deadline).toLocaleDateString('ko-KR'):'미정'}) 기준 자동 수립</div>`;
+        view.innerHTML = html;
+    }
+
+    function renderCalendarView(rec) {
+        const container = document.getElementById('calendarView');
+        if (!container) return;
+        const today = new Date(), year = today.getFullYear(), month = today.getMonth();
+        const firstDay = new Date(year,month,1).getDay(), daysInMonth = new Date(year,month+1,0).getDate(), todayDate = today.getDate();
+        let html = `<h3 style="font-size:0.9rem;font-weight:700;color:var(--navy);margin-bottom:0.8rem;">📅 ${year}년 ${month+1}월</h3><div class="calendar-grid">`;
+        ['일','월','화','수','목','금','토'].forEach(d => { html += `<div class="cal-day-name">${d}</div>`; });
+        for (let i=0;i<firstDay;i++) html += '<div class="cal-cell empty"></div>';
+        const tasks = ['리서치','자료정리','분석','초안','작성','피드백','수정','점검'];
+        let ti = 0;
+        for (let day=1;day<=daysInMonth;day++) {
+            const isToday = day===todayDate;
+            let task = '';
+            if (day >= todayDate && ti < tasks.length) { task = tasks[ti]; ti++; }
+            const personal = personalSchedule[day]||'';
+            html += `<div class="cal-cell ${isToday?'today':''}"><div class="cal-date">${day}</div>${task?`<div class="cal-task-text">· ${task}</div>`:''}${personal?`<div class="cal-personal-text">★ ${personal}</div>`:''}</div>`;
+        }
+        html += '</div>';
+        container.innerHTML = html;
+    }
+
+    // ============ 이벤트 핸들러 ============
+    function switchProgram(idx) { currentProgram=parseInt(idx); const r=recommendations[currentProgram]; if(r){renderGap(r);renderActionView(r);renderCalendarView(r);resetGuideView();} }
+    function switchView(view) { currentView=view; document.getElementById('actionView').style.display=view==='action'?'block':'none'; document.getElementById('calendarView').style.display=view==='calendar'?'block':'none'; document.getElementById('guideView').style.display=view==='guide'?'block':'none'; document.getElementById('btnAction').classList.toggle('active',view==='action'); document.getElementById('btnCalendar').classList.toggle('active',view==='calendar'); document.getElementById('btnGuide').classList.toggle('active',view==='guide'); }
+
+    async function requestGuide() {
+        const rec = recommendations[currentProgram];
+        if (!rec) { showToast('⚠️ 프로그램을 먼저 선택하세요.'); return; }
+        const guideView = document.getElementById('guideView');
+        guideView.innerHTML = '<div style="text-align:center;padding:2rem;color:var(--text-light);"><p>🤖 AI가 가이드라인을 생성 중입니다...</p><p style="font-size:0.8rem;margin-top:0.5rem;">잠시만 기다려주세요 (최대 30초)</p></div>';
+        try {
+            const res = await fetch(`${API_BASE}/api/guide`, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ title: rec.title })
+            });
+            const data = await res.json();
+            if (data.error) {
+                guideView.innerHTML = `<div style="padding:1.5rem;background:#fef2f2;border:1px solid #fca5a5;border-radius:12px;"><p style="color:#dc2626;font-weight:600;">⚠️ 가이드라인 생성 실패</p><p style="font-size:0.85rem;color:var(--text);margin-top:0.5rem;">${data.error}</p><button onclick="requestGuide()" style="margin-top:1rem;padding:0.5rem 1.5rem;background:var(--navy);color:white;border:none;border-radius:8px;cursor:pointer;">다시 시도</button></div>`;
+            } else {
+                const guideHtml = data.guide.replace(/\n/g, '<br>').replace(/^## (.+)/gm, '<h3 style="color:var(--navy);margin-top:1rem;">$1</h3>').replace(/^### (.+)/gm, '<h4 style="color:var(--navy-light);margin-top:0.8rem;">$1</h4>').replace(/\*\*(.+?)\*\*/g, '<strong>$1</strong>');
+                guideView.innerHTML = `<div style="padding:1.5rem;background:white;border:1px solid var(--border);border-radius:12px;max-height:500px;overflow-y:auto;">
+                    <div style="display:flex;align-items:center;gap:0.5rem;margin-bottom:1rem;padding-bottom:0.8rem;border-bottom:1px solid var(--border);">
+                        <span style="font-size:1.2rem;">🤖</span>
+                        <h3 style="font-size:0.95rem;font-weight:700;color:var(--navy);">${rec.title} - AI 준비 가이드라인</h3>
+                    </div>
+                    <div style="font-size:0.85rem;line-height:1.8;color:var(--text);">${guideHtml}</div>
+                </div>`;
+            }
+        } catch (e) {
+            guideView.innerHTML = `<div style="padding:1.5rem;background:#fef2f2;border:1px solid #fca5a5;border-radius:12px;"><p style="color:#dc2626;font-weight:600;">⚠️ 서버 연결 실패</p><p style="font-size:0.85rem;color:var(--text);margin-top:0.5rem;">${e.message}</p><button onclick="requestGuide()" style="margin-top:1rem;padding:0.5rem 1.5rem;background:var(--navy);color:white;border:none;border-radius:8px;cursor:pointer;">다시 시도</button></div>`;
+        }
+    }
+
+    function resetGuideView() {
+        const guideView = document.getElementById('guideView');
+        const rec = recommendations[currentProgram];
+        const title = rec ? rec.title : '프로그램';
+        guideView.innerHTML = `<div style="text-align:center;padding:2rem;color:var(--text-light);">
+            <p>"${title}"에 대한 AI 준비 가이드라인을 생성합니다.</p>
+            <button onclick="requestGuide()" style="margin-top:1rem;padding:0.8rem 2rem;background:var(--navy);color:white;border:none;border-radius:10px;font-size:0.9rem;font-weight:600;cursor:pointer;">🤖 가이드라인 생성하기</button>
+        </div>`;
+        if (currentView === 'guide') requestGuide();
+    }
+    function toggleFb(btn,type) { const btns=btn.parentElement.querySelectorAll('.fb-btn'); btns.forEach(b=>b.classList.remove('like-active','dislike-active')); btn.classList.add(type==='like'?'like-active':'dislike-active'); const name=btn.closest('.fb-program').querySelector('.fb-program-name').textContent; showToast(type==='like'?`👍 "${name}" 관심 표시!`:`👎 "${name}" 관심 없음 반영!`); }
+    function submitFeedback() { showToast('✅ 피드백 반영 완료!'); document.getElementById('fbText').value=''; }
+    function showToast(msg) { const t=document.getElementById('feedbackToast'); t.textContent=msg; t.classList.add('show'); setTimeout(()=>t.classList.remove('show'),2500); }
+    function openSettings() { if(profileData.name)document.getElementById('setName').value=profileData.name; if(profileData.major)document.getElementById('setMajor').value=profileData.major; if(profileData.grade)document.getElementById('setYear').value=profileData.grade; if(profileData.interests)document.getElementById('setInterests').value=profileData.interests.join(', '); document.getElementById('settingsModal').classList.add('show'); }
+    function closeSettings() { document.getElementById('settingsModal').classList.remove('show'); }
+    function saveSettings() { saveProfileToServer(); }
+    document.getElementById('settingsModal').addEventListener('click',function(e){if(e.target===this)closeSettings();});
+
+    // ============ 시작 ============
+    // (하드코딩 데이터는 제거됨 - API에서 동적으로 로드)
+    init();
+    </script>
+</body>
+</html>

@@ -1,0 +1,33 @@
+{
+  "exportedAt": "2026-05-16T08:03:39.156Z",
+  "totalCount": 40,
+  "byCategory": {
+    "contests": 0,
+    "activities": 40,
+    "interns": 0,
+    "volunteers": 0,
+    "seminars": 0
+  },
+  "bySource": {
+    "linkareer": 40
+  },
+  "schema": {
+    "description": "각 이벤트 객체의 필드 설명",
+    "fields": {
+      "title": "활동 제목 (필수)",
+      "category": "CONTEST | ACTIVITY | INTERN | VOLUNTEER | EXAM | SCHOLARSHIP | SEMINAR",
+      "status": "UPCOMING | ONGOING | CLOSED",
+      "startDate": "ISO 날짜 문자열",
+      "endDate": "ISO 날짜 문자열 또는 null",
+      "deadline": "ISO 날짜 문자열 또는 null (지원 마감일)",
+      "organizer": "주최기관 또는 null",
+      "location": "장소/지역 또는 null",
+      "field": "분야 태그 배열 (예: [\"IT\", \"마케팅\"])",
+      "targetAudience": "대상 배열 (예: [\"대학생\"])",
+      "reward": "상금/혜택 또는 null",
+      "url": "원본 링크 또는 null",
+      "source": "데이터 출처 (wevity, 1365, linkareer 등)",
+      "sourceId": "원본 사이트 ID (중복 방지용)"
+    }
+  }
+}
