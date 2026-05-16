@@ -33,6 +33,7 @@ def main():
             Experience(
                 title="교내 AI 챗봇 프로젝트",
                 category="프로젝트",
+                preference="좋음",
                 description="GPT API를 활용한 학사 안내 챗봇 개발",
                 duration="2025.09 ~ 2025.12",
                 skills=["Python", "OpenAI API", "Flask"],
@@ -40,6 +41,7 @@ def main():
             Experience(
                 title="네이버 부스트캠프 AI Tech",
                 category="교육",
+                preference="좋음",
                 description="AI 엔지니어링 집중 교육 과정 수료",
                 duration="2025.06 ~ 2025.08",
                 skills=["PyTorch", "NLP", "데이터 분석"],
@@ -47,6 +49,7 @@ def main():
             Experience(
                 title="스타트업 인턴 (백엔드)",
                 category="인턴",
+                preference="나쁨",
                 description="REST API 설계 및 DB 최적화 업무",
                 duration="2025.01 ~ 2025.02",
                 skills=["Node.js", "PostgreSQL", "Docker"],
@@ -65,7 +68,8 @@ def main():
     if user.experiences:
         print(f"  경력: {len(user.experiences)}건")
         for exp in user.experiences:
-            print(f"    - {exp.title} ({exp.category})")
+            pref_icon = "👍" if exp.preference == "좋음" else "👎"
+            print(f"    {pref_icon} {exp.title} ({exp.category})")
     print(f"{'='*60}\n")
 
     # 이벤트 데이터 로드

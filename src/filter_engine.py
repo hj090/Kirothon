@@ -115,7 +115,8 @@ def build_ai_scoring_prompt(user: UserProfile, events: List[Tuple[Event, float]]
     if user.experiences:
         exp_lines = []
         for exp in user.experiences:
-            line = f"  - {exp.title} ({exp.category})"
+            pref = "👍 좋았음" if exp.preference == "좋음" else "👎 싫었음"
+            line = f"  - {exp.title} ({exp.category}) [{pref}]"
             if exp.skills:
                 line += f" | 기술: {', '.join(exp.skills)}"
             if exp.description:
@@ -141,6 +142,8 @@ def build_ai_scoring_prompt(user: UserProfile, events: List[Tuple[Event, float]]
 - 보유 기술 스택이 활동에서 요구하는 역량과 일치하는가
 - 이 활동이 사용자의 커리어 성장에 기여하는가
 - 경력 수준 대비 활동 난이도가 적절한가
+- 사용자가 "좋았음"으로 표시한 경력과 유사한 활동은 가산점
+- 사용자가 "싫었음"으로 표시한 경력과 유사한 활동은 감점 (사용자가 피하고 싶은 유형)
 
 [사용자]
 - 학교: {user.university} / 학과: {user.major} / {user.grade}학년

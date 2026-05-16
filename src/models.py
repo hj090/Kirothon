@@ -33,6 +33,7 @@ class Experience:
     """경력/활동 이력"""
     title: str              # 경력명 (예: "ABC 해커톤 대상")
     category: str           # 유형 (예: "공모전", "인턴", "프로젝트", "동아리")
+    preference: str = "좋음"  # 선호도 ("좋음" / "나쁨")
     description: str = ""   # 상세 설명
     duration: str = ""      # 기간 (예: "2025.03 ~ 2025.06")
     skills: List[str] = dataclass_field(default_factory=list)  # 사용 기술/역량
